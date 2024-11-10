@@ -8,14 +8,6 @@ function showChat() {
   converse(summary);
 }
 
-document.getElementById('fillButton').addEventListener('click', () => {
-  converse("List all the possible input fields in the form in the order they appear in")
-  converse("Resume First Name: John, Last Name: Doe, Email: jd@aa.a, Phone: 123-456-7890, Address: 123 Main St, City: New York, State: NY, Zip: 12345")
-  for (let i = 1; i < 12; i++) {
-    converse("Use a single line to instruct me on how to fill out ONLY the " + i + "th input field in the form using the information on my resume(if possible).  Use the format of the following example: Fill out the (number) input field in the code with your _");
-  }
-});
-
 document.getElementById('send-button').addEventListener('click', () => {converse(document.getElementById('user-input').value, true)});
 
 function converse(userInput, display = false) {
