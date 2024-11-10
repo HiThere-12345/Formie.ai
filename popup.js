@@ -64,7 +64,7 @@ async function getChatGPTResponse(userInput, textContent) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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'
+          'Authorization': 'Bearer '
         },
         body: JSON.stringify({
           model: 'chatgpt-4o-latest',
