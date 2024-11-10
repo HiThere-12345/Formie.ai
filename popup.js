@@ -8,9 +8,17 @@ function showChat() {
   converse(summary);
 }
 
-document.getElementById('send-button').addEventListener('click', () => {converse(document.getElementById('user-input').value)});
+document.getElementById('fillButton').addEventListener('click', () => {
+  converse("List all the possible input fields in the form in the order they appear in")
+  converse("Resume First Name: John, Last Name: Doe, Email: jd@aa.a, Phone: 123-456-7890, Address: 123 Main St, City: New York, State: NY, Zip: 12345")
+  for (let i = 1; i < 12; i++) {
+    converse("Use a single line to instruct me on how to fill out ONLY the " + i + "th input field in the form using the information on my resume(if possible).  Use the format of the following example: Fill out the (number) input field in the code with your _");
+  }
+});
 
-function converse(userInput) {
+document.getElementById('send-button').addEventListener('click', () => {converse(document.getElementById('user-input').value, true)});
+
+function converse(userInput, display = false) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const url = tabs[0].url;
     if (url.startsWith('chrome://')) {
@@ -33,7 +41,9 @@ function converse(userInput) {
         if (response && response.text) {
           const textContent = response.text;
           console.log(response.text);
-          addMessage('User', userInput);
+          if (display){
+            addMessage('User', userInput);
+          }
           getChatGPTResponse(userInput, textContent);
           document.getElementById('user-input').value = '';
         } else {
@@ -105,23 +115,3 @@ async function getChatGPTResponse(userInput, textContent) {
     }
   }
 }
-
-const formData = {
-  name: "John Doe"
-};
-
-document.getElementById('fillButton').addEventListener('click', () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      func: (data) => {
-        document.querySelectorAll('input, textarea').forEach(input => {
-          if (input.name && data[input.name]) {
-            input.value = data[input.name];
-          }
-        });
-      },
-      args: [formData]
-    });
-  });
-});
