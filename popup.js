@@ -1,43 +1,54 @@
-document.getElementById('send-button').addEventListener('click', () => {
-  const userInput = document.getElementById('user-input').value;
-  if (userInput) {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const url = tabs[0].url;
-      if (url.startsWith('chrome://')) {
-        console.error('Cannot interact with chrome:// URLs');
+document.getElementById('startChat').addEventListener('click', showChat);
+
+function showChat() {
+  document.getElementById('chat').removeAttribute("hidden");
+  document.getElementById('send-button').removeAttribute("hidden");
+  document.getElementById('startChat').setAttribute("hidden", true);
+  summary = "Create a simplified summary of the page content. Mention the key points and the main idea of the page."
+  converse(summary);
+}
+
+document.getElementById('send-button').addEventListener('click', () => {converse(document.getElementById('user-input').value)});
+
+function converse(userInput) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const url = tabs[0].url;
+    if (url.startsWith('chrome://')) {
+      console.error('Cannot interact with chrome:// URLs');
+      return;
+    }
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      files: ['content.js']
+    }, (results) => {
+      if (chrome.runtime.lastError) {
+        console.error('Script injection failed: ' + chrome.runtime.lastError.message);
         return;
       }
-      chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        files: ['content.js']
-      }, (results) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'getTextContent' }, (response) => {
         if (chrome.runtime.lastError) {
-          console.error('Script injection failed: ' + chrome.runtime.lastError.message);
+          console.error('Message sending failed: ' + chrome.runtime.lastError.message);
           return;
         }
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'getTextContent' }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error('Message sending failed: ' + chrome.runtime.lastError.message);
-            return;
-          }
-          if (response && response.text) {
-            const textContent = response.text;
-            addMessage('User', userInput);
-            getChatGPTResponse(userInput, textContent);
-            document.getElementById('user-input').value = '';
-          } else {
-            console.error('Failed to retrieve text content or response is undefined');
-          }
-        });
+        if (response && response.text) {
+          const textContent = response.text;
+          console.log(response.text);
+          addMessage('User', userInput);
+          getChatGPTResponse(userInput, textContent);
+          document.getElementById('user-input').value = '';
+        } else {
+          console.error('Failed to retrieve text content or response is undefined');
+        }
       });
     });
-  }
-});
+  });
+}
 
 function addMessage(sender, message) {
   const chatbox = document.getElementById('chatbox');
   const messageElement = document.createElement('div');
   messageElement.textContent = `${sender}: ${message}`;
+  messageElement.style.fontSize = '16px';
   chatbox.appendChild(messageElement);
   chatbox.scrollTop = chatbox.scrollHeight;
 }
@@ -53,10 +64,10 @@ async function getChatGPTResponse(userInput, textContent) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-proj-rtl8xw4O4du6FimFCKsaT3BlbkFJQgXaG4kJABwPxI9k5h1F'
+          'Authorization': 'Bearer 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'
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'chatgpt-4o-latest',
           messages: [
             { role: 'system', content: 'You are an assistant that processes web page content.' },
             { role: 'user', content: `User input: ${userInput}` },
@@ -94,3 +105,23 @@ async function getChatGPTResponse(userInput, textContent) {
     }
   }
 }
+
+const formData = {
+  name: "John Doe"
+};
+
+document.getElementById('fillButton').addEventListener('click', () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      func: (data) => {
+        document.querySelectorAll('input, textarea').forEach(input => {
+          if (input.name && data[input.name]) {
+            input.value = data[input.name];
+          }
+        });
+      },
+      args: [formData]
+    });
+  });
+});
